@@ -9,7 +9,7 @@ usage() {
 }
 
 containerImageBuild() {
-    docker build --build-arg OS=$1 --build-arg ARCH=$2 -t linuxshots/godaddy-ddns:$3 $basedir
+    docker build --build-arg OS=$1 --build-arg ARCH=$2 -t wrenchpilot/godaddy-ddns:$3 $basedir
 }
 
 binaryBuild() {
