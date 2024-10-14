@@ -32,6 +32,7 @@ type DNSRecord struct {
 	TTL    int    `json:"ttl"`
 	Key    string `json:"key"`
 	Secret string `json:"secret"`
+	Env    string `json:"env"`
 }
 
 type Configuration struct {
@@ -187,6 +188,7 @@ func main() {
 	ttl := addCmd.Int("ttl", 600, "Time-to-live in seconds. Minimum 600 seconds.")
 	key := addCmd.String("key", "", "Key value generated from godaddy developer console")
 	secret := addCmd.String("secret", "", "Secret value generated from godaddy developer console")
+	env := addCmd.String("environment", "production", "Environment of GoDaddy (production or ote)")
 
 	deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
 	deleteDomain := deleteCmd.String("domain", "", "Domain name e.g. example.com")
@@ -198,6 +200,7 @@ func main() {
 	updateTtl := updateCmd.Int("ttl", 600, "Time-to-live in seconds. Minimum 600 seconds.")
 	updateKey := updateCmd.String("key", "", "Key value generated from godaddy developer console")
 	updateSecret := updateCmd.String("secret", "", "Secret value generated from godaddy developer console")
+	updateEnv := addCmd.String("environment", "production", "Environment of GoDaddy (production or ote)")
 
 	var usage = func() {
 		fmt.Printf("\nUsage:\n")
@@ -252,7 +255,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		err := addRecord(*domain, *name, *key, *secret, *ttl, false)
+		err := addRecord(*domain, *name, *key, *secret, *env, *ttl, false)
 		if err != nil {
 			GoDaddyDDNSLogger(ErrorLog, *name, *domain, err.Error()+" Failed to add record.")
 			os.Exit(1)
@@ -288,7 +291,7 @@ func main() {
 			updateCmd.PrintDefaults()
 			os.Exit(1)
 		}
-		err := addRecord(*updateDomain, *updateName, *updateKey, *updateSecret, *updateTtl, true)
+		err := addRecord(*updateDomain, *updateName, *updateKey, *updateSecret, *updateEnv, *updateTtl, true)
 		if err != nil {
 			GoDaddyDDNSLogger(ErrorLog, *updateName, *updateDomain, "Failed to update record. "+err.Error())
 			os.Exit(1)
@@ -313,20 +316,21 @@ func main() {
 
 }
 
-func addRecord(domain, name, key, secret string, ttl int, isUpdate bool) error {
+func addRecord(domain, name, key, secret, env string, ttl int, isUpdate bool) error {
 	record := DNSRecord{
 		Domain: domain,
 		Name:   name,
 		Key:    key,
 		Secret: secret,
 		TTL:    ttl,
+		Env:    env,
 	}
 
 	var config Configuration
 	var updatedConfig Configuration
 	var hasUpdated bool = false
 
-	body, err := getDNSRecord(name, domain, key, secret)
+	body, err := getDNSRecord(name, domain, key, secret, env)
 	if err != nil {
 		return &CustomError{ErrorCode: 1, Err: errors.New("addRecord Error getting DNS record " + err.Error())}
 		// return err
@@ -397,7 +401,7 @@ func addRecord(domain, name, key, secret string, ttl int, isUpdate bool) error {
 	}
 
 	if ttl != existingTtl || pubIp != existingIp {
-		_, err := setDNSRecord(name, domain, key, secret, pubIp, ttl)
+		_, err := setDNSRecord(name, domain, key, secret, pubIp, env, ttl)
 		if err != nil {
 			return &CustomError{ErrorCode: 1, Err: errors.New("addRecord Error setting DNS record " + err.Error())}
 			// return err
@@ -416,10 +420,20 @@ func addRecord(domain, name, key, secret string, ttl int, isUpdate bool) error {
 	return nil
 }
 
-func getDNSRecord(name, domain, key, secret string) (string, error) {
+func getDNSRecord(name, domain, key, secret, env string) (string, error) {
 	// Get record details from GoDaddy
 
-	gdURL := "https://api.godaddy.com/" + godaddy_api_version + "/domains/" + domain + "/records/A/" + name
+	var gdAPI string
+
+	if env == "production" {
+		gdAPI = "https://api.godaddy.com"
+	} else if env == "ote" {
+		gdAPI = "https://api.ote-godaddy.com"
+	} else {
+		return "", &CustomError{ErrorCode: 1, Err: errors.New("Invalid environment " + gdAPI)}
+	}
+
+	gdURL := gdAPI + "/" + godaddy_api_version + "/domains/" + domain + "/records/A/" + name
 	authorization := key + ":" + secret
 
 	apiclient := &http.Client{}
@@ -497,9 +511,19 @@ func getPubIP() (string, error) {
 
 }
 
-func setDNSRecord(name, domain, key, secret, pubIp string, ttl int) (string, error) {
+func setDNSRecord(name, domain, key, secret, pubIp, env string, ttl int) (string, error) {
 
-	gdURL := "https://api.godaddy.com/" + godaddy_api_version + "/domains/" + domain + "/records/A/" + name
+	var gdAPI string
+
+	if env == "production" {
+		gdAPI = "https://api.godaddy.com"
+	} else if env == "ote" {
+		gdAPI = "https://api.ote-godaddy.com"
+	} else {
+		return "", &CustomError{ErrorCode: 1, Err: errors.New("Invalid environment " + gdAPI)}
+	}
+
+	gdURL := gdAPI + "/" + godaddy_api_version + "/domains/" + domain + "/records/A/" + name
 	authorization := key + ":" + secret
 
 	type Data struct {
@@ -707,8 +731,9 @@ func daemonDDNS() {
 						key := i.Key
 						secret := i.Secret
 						ttl := i.TTL
+						env := i.Env
 
-						body, err := getDNSRecord(name, domain, key, secret)
+						body, err := getDNSRecord(name, domain, key, secret, env)
 						if err != nil {
 							GoDaddyDDNSLogger(ErrorLog, name, domain, "Failed to get current state of record. "+err.Error())
 							continue
@@ -739,7 +764,7 @@ func daemonDDNS() {
 						}
 
 						if ttl != existingTtl || pubIp != existingIp {
-							_, err := setDNSRecord(name, domain, key, secret, pubIp, ttl)
+							_, err := setDNSRecord(name, domain, key, secret, pubIp, env, ttl)
 							if err != nil {
 								GoDaddyDDNSLogger(ErrorLog, name, domain, "Failed to update record. "+err.Error())
 								continue

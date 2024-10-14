@@ -8,14 +8,18 @@ if [ "$GD_NAME" == "" -o "$GD_DOMAIN" == "" -o "$GD_TTL" == "" -o "$GD_KEY" == "
     exit 1
 fi
 
+if [ "$GD_ENVIRONMENT" == "" ]; then
+    GD_ENVIRONMENT="production"
+fi
+
 if [ $GD_TTL -lt 600 ]; then
     echo "ERROR TTL must be greater than or equal to 600."
     exit 1
 fi
 if [ ! -f $HOME/.config/godaddy-ddns/config.json ]; then
-    /app/godaddyddns add --domain="$GD_DOMAIN" --name="$GD_NAME" --ttl=$GD_TTL --key="$GD_KEY" --secret="$GD_SECRET"
+    /app/godaddyddns add --domain="$GD_DOMAIN" --name="$GD_NAME" --ttl=$GD_TTL --key="$GD_KEY" --secret="$GD_SECRET" --environment="$GD_ENVIRONMENT"
 else
     echo "Configuration already exist. Syncing the record"
-    /app/godaddyddns update --domain="$GD_DOMAIN" --name="$GD_NAME" --ttl=$GD_TTL --key="$GD_KEY" --secret="$GD_SECRET"
+    /app/godaddyddns update --domain="$GD_DOMAIN" --name="$GD_NAME" --ttl=$GD_TTL --key="$GD_KEY" --secret="$GD_SECRET" --environment="$GD_ENVIRONMENT"
 fi
 /app/godaddyddns daemon
