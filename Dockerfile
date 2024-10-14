@@ -1,4 +1,4 @@
-FROM golang:1.19.0-alpine3.16 as build
+FROM golang:1.19.0-alpine3.16 AS build
 ARG OS
 ARG ARCH
 COPY . /build/
