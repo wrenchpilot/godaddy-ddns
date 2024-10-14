@@ -200,7 +200,7 @@ func main() {
 	updateTtl := updateCmd.Int("ttl", 600, "Time-to-live in seconds. Minimum 600 seconds.")
 	updateKey := updateCmd.String("key", "", "Key value generated from godaddy developer console")
 	updateSecret := updateCmd.String("secret", "", "Secret value generated from godaddy developer console")
-	updateEnv := addCmd.String("environment", "ote", "Environment of GoDaddy (production or ote)")
+	updateEnv := updateCmd.String("environment", "ote", "Environment of GoDaddy (production or ote)")
 
 	var usage = func() {
 		fmt.Printf("\nUsage:\n")
