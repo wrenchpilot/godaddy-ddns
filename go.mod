@@ -1,4 +1,4 @@
-module github.com/navilg/godaddy-ddns
+module github.com/wrenchpilot/godaddy-ddns
 
 go 1.17
 

@@ -242,8 +242,8 @@ func main() {
 
 	case "add":
 		addCmd.Parse(os.Args[2:])
-		if *domain == "" || *name == "" || *key == "" || *secret == "" {
-			fmt.Println("ERROR domain, name, key and secret are mandatory")
+		if *domain == "" || *name == "" || *key == "" || *secret == "" || *env == "" {
+			fmt.Println("ERROR domain, name, key, secret and environment are mandatory")
 			fmt.Printf("\nUsage of %s:\n", os.Args[1])
 			addCmd.PrintDefaults()
 			os.Exit(1)
@@ -279,7 +279,7 @@ func main() {
 
 	case "update":
 		updateCmd.Parse(os.Args[2:])
-		if *updateDomain == "" || *updateName == "" || *updateKey == "" || *updateSecret == "" {
+		if *updateDomain == "" || *updateName == "" || *updateKey == "" || *updateSecret == "" || *updateEnv == "" {
 			fmt.Println("ERROR domain, name, key and secret are mandatory")
 			fmt.Printf("\nUsage of %s:\n", os.Args[1])
 			updateCmd.PrintDefaults()
