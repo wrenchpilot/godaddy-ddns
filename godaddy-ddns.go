@@ -188,7 +188,7 @@ func main() {
 	ttl := addCmd.Int("ttl", 600, "Time-to-live in seconds. Minimum 600 seconds.")
 	key := addCmd.String("key", "", "Key value generated from godaddy developer console")
 	secret := addCmd.String("secret", "", "Secret value generated from godaddy developer console")
-	env := addCmd.String("environment", "production", "Environment of GoDaddy (production or ote)")
+	env := addCmd.String("environment", "ote", "Environment of GoDaddy (production or ote)")
 
 	deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
 	deleteDomain := deleteCmd.String("domain", "", "Domain name e.g. example.com")
@@ -200,7 +200,7 @@ func main() {
 	updateTtl := updateCmd.Int("ttl", 600, "Time-to-live in seconds. Minimum 600 seconds.")
 	updateKey := updateCmd.String("key", "", "Key value generated from godaddy developer console")
 	updateSecret := updateCmd.String("secret", "", "Secret value generated from godaddy developer console")
-	updateEnv := addCmd.String("environment", "production", "Environment of GoDaddy (production or ote)")
+	updateEnv := addCmd.String("environment", "ote", "Environment of GoDaddy (production or ote)")
 
 	var usage = func() {
 		fmt.Printf("\nUsage:\n")

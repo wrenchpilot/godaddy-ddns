@@ -9,7 +9,7 @@ if [ "$GD_NAME" == "" -o "$GD_DOMAIN" == "" -o "$GD_TTL" == "" -o "$GD_KEY" == "
 fi
 
 if [ "$GD_ENVIRONMENT" == "" ]; then
-    GD_ENVIRONMENT="production"
+    GD_ENVIRONMENT="ote"
 fi
 
 if [ $GD_TTL -lt 600 ]; then
